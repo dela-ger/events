@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role user_role NOT NULL,
-    company_id INTGER REFERENCES companies(id) ON DELETE SET NULL,
+    company_id INTEGER REFERENCES companies(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
     currency TEXT NOT NULL DEFAULT 'USD',
     quantity_total INTEGER NOT NULL CHECK (quantity_total >= 0),
-    quuantity_sold INTEGER NOT NULL DEFAULT 0 CHECK (quantity_sold >= 0),
+    quantity_sold INTEGER NOT NULL DEFAULT 0 CHECK (quantity_sold >= 0),
     per_user_limit INTEGER,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
