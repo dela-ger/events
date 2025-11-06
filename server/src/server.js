@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-
+import companyRoutes from './modules/company/company.routes.js';
 import router from './routes.js';
 
 dotenv.config();
@@ -12,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(router);
+app.use('/companies', companyRoutes);
 
 app.get('health', (req, res) => res.json({ ok: true }));
 
