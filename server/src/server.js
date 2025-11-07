@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import companyRoutes from './modules/company/company.routes.js';
+import eventRoutes from './modules/event/event.routes.js';
 import router from './routes.js';
 
 dotenv.config();
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(router);
 app.use('/companies', companyRoutes);
+app.use('/events', eventRoutes);
 
 app.get('health', (req, res) => res.json({ ok: true }));
 
