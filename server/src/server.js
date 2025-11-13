@@ -4,6 +4,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import companyRoutes from './modules/company/company.routes.js';
 import eventRoutes from './modules/event/event.routes.js';
+import ticketRoutes from './modules/ticket/ticket.routes.js';
+import salesRoutes from './modules/sales/sales.routes.js';
 import router from './routes.js';
 
 dotenv.config();
@@ -15,6 +17,8 @@ app.use(morgan('dev'));
 app.use(router);
 app.use('/companies', companyRoutes);
 app.use('/events', eventRoutes);
+app.use('/tickets', ticketRoutes);
+app.use('/sales', salesRoutes);
 
 app.get('health', (req, res) => res.json({ ok: true }));
 
