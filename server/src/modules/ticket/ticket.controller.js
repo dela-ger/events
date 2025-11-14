@@ -180,3 +180,47 @@ export const getTicket = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch ticket' });
   }
 };
+
+// ticket availability check
+export const getTicketAvailability = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const ticketId = parseInt(req.params.id);
+
+    // Get ticket info
+    const ticketRes = await query(
+      `SELECT id, quantity_total, quantity_sold, per_user_limit
+       FROM tickets
+       WHERE id = $1`,
+      [ticketId]
+    );
+
+    const ticket = ticketRes.rows[0];
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    const remaining = ticket.quantity_total - ticket.quantity_sold;
+
+    // Get user's current purchases
+    const userSalesRes = await query(
+      `SELECT COALESCE(SUM(quantity), 0) AS user_total
+       FROM sales
+       WHERE user_id = $1 AND ticket_id = $2`,
+      [userId, ticketId]
+    );
+
+    const userTotal = parseInt(userSalesRes.rows[0].user_total);
+
+    res.json({
+      ticket_id: ticket.id,
+      remaining,
+      per_user_limit: ticket.per_user_limit,
+      user_purchased: userTotal,
+      user_remaining: Math.max(ticket.per_user_limit - userTotal, 0)
+    });
+  } catch (error) {
+    console.error('Failed to fetch ticket availability:', error);
+    res.status(500).json({ error: 'Failed to fetch ticket availability' });
+  }
+};

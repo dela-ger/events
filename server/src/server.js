@@ -6,6 +6,7 @@ import companyRoutes from './modules/company/company.routes.js';
 import eventRoutes from './modules/event/event.routes.js';
 import ticketRoutes from './modules/ticket/ticket.routes.js';
 import salesRoutes from './modules/sales/sales.routes.js';
+import userRoutes from './modules/user/user.routes.js';
 import router from './routes.js';
 
 dotenv.config();
@@ -19,6 +20,7 @@ app.use('/companies', companyRoutes);
 app.use('/events', eventRoutes);
 app.use('/tickets', ticketRoutes);
 app.use('/', salesRoutes);
+app.use('/users', userRoutes);
 app.use(router);
 
 app.get('/health', (req, res) => res.json({ ok: true }));

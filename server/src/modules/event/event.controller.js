@@ -186,3 +186,57 @@ export const listEvents = async (req, res) => {
     res.status(500).json({ error: 'Failed to list events' });
   }
 };
+
+// get events summary for dashboard
+export const getEventSummary = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const eventId = parseInt(req.params.id);
+
+    // Verify event ownership
+    const eventCheck = await query(
+      `SELECT id, title, start_time, venue
+       FROM events
+       WHERE id = $1 AND company_id = $2`,
+      [eventId, companyId]
+    );
+
+    if (eventCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found or unauthorized' });
+    }
+
+    const event = eventCheck.rows[0];
+
+    // Get ticket-level breakdown
+    const ticketStats = await query(
+      `SELECT t.id, t.name, t.price_cents, t.currency,
+              t.quantity_total, t.quantity_sold,
+              COALESCE(SUM(s.quantity), 0) AS sold,
+              COALESCE(SUM(s.quantity * t.price_cents), 0) AS revenue_cents
+       FROM tickets t
+       LEFT JOIN sales s ON s.ticket_id = t.id
+       WHERE t.event_id = $1
+       GROUP BY t.id
+       ORDER BY t.name ASC`,
+      [eventId]
+    );
+
+    // Aggregate totals
+    const totalTickets = ticketStats.rows.reduce((sum, t) => sum + t.quantity_total, 0);
+    const totalSold = ticketStats.rows.reduce((sum, t) => sum + parseInt(t.sold), 0);
+    const totalRevenue = ticketStats.rows.reduce((sum, t) => sum + parseInt(t.revenue_cents), 0);
+
+    res.json({
+      event,
+      totals: {
+        tickets_created: totalTickets,
+        tickets_sold: totalSold,
+        revenue_cents: totalRevenue
+      },
+      tickets: ticketStats.rows
+    });
+  } catch (error) {
+    console.error('Failed to fetch event summary:', error);
+    res.status(500).json({ error: 'Failed to fetch event summary' });
+  }
+};

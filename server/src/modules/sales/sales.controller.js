@@ -1,3 +1,4 @@
+import { sendTicketConfirmationEmail, triggerWebhook } from '../../utils/notifications.js';
 import { query } from '../../config/db.js';
 
 export const purchaseTicket = async (req, res) => {
@@ -55,6 +56,16 @@ export const purchaseTicket = async (req, res) => {
        WHERE id = $2`,
       [quantity, ticket_id]
     );
+
+    // notifications and webhooks
+    await sendTicketConfirmationEmail(req.user, ticket, quantity);
+
+    await triggerWebhook('ticket.purchase', {
+      user_id: userId,
+      ticket_id,
+      quantity
+    });
+
 
     res.status(201).json({ message: 'Ticket purchased successfully' });
   } catch (error) {
@@ -178,5 +189,56 @@ export const getDashboardSummary = async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch dashboard summary:', error);
     res.status(500).json({ error: 'Failed to fetch dashboard summary' });
+  }
+};
+
+// add access control as needed
+export const getSalesByUser = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const userId = parseInt(req.params.id);
+
+    const result = await query(
+      `SELECT s.id, s.quantity, s.created_at,
+              t.name AS ticket_name, t.price_cents, t.currency,
+              e.title AS event_title, e.start_time AS event_date, e.venue AS event_location
+       FROM sales s
+       JOIN tickets t ON s.ticket_id = t.id
+       JOIN events e ON t.event_id = e.id
+       WHERE s.user_id = $1 AND e.company_id = $2
+       ORDER BY s.created_at DESC`,
+      [userId, companyId]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Failed to fetch sales by user:', error);
+    res.status(500).json({ error: 'Failed to fetch sales by user' });
+  }
+};
+
+// get user purchase summary
+export const getUserPurchaseSummary = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const userId = parseInt(req.params.id);
+
+    const result = await query(
+      `SELECT e.id AS event_id, e.title AS event_title,
+              COALESCE(SUM(s.quantity), 0) AS tickets_purchased,
+              COALESCE(SUM(s.quantity * t.price_cents), 0) AS revenue_cents
+       FROM sales s
+       JOIN tickets t ON s.ticket_id = t.id
+       JOIN events e ON t.event_id = e.id
+       WHERE s.user_id = $1 AND e.company_id = $2
+       GROUP BY e.id, e.title
+       ORDER BY e.title ASC`,
+      [userId, companyId]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Failed to fetch user purchase summary:', error);
+    res.status(500).json({ error: 'Failed to fetch user purchase summary' });
   }
 };
