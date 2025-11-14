@@ -133,3 +133,56 @@ export const deleteEvent = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete event' });
   }
 };
+
+// list all events (for admin purposes)
+export const listEvents = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const includeTickets = req.query.includeTickets === 'true';
+
+    // Get all events for the company
+    const eventRes = await query(
+      `SELECT id, title, description, date, location
+       FROM events
+       WHERE company_id = $1
+       ORDER BY date ASC`,
+      [companyId]
+    );
+
+    const events = eventRes.rows;
+
+    if (!includeTickets) {
+      return res.json(events);
+    }
+
+    // Get all tickets for those events
+    const eventIds = events.map(e => e.id);
+    if (eventIds.length === 0) return res.json([]);
+
+    const ticketRes = await query(
+      `SELECT id, event_id, name, price_cents, currency, quantity_total, quantity_sold, per_user_limit
+       FROM tickets
+       WHERE event_id = ANY($1::int[])`,
+      [eventIds]
+    );
+
+    const ticketsByEvent = {};
+    ticketRes.rows.forEach(ticket => {
+      if (!ticketsByEvent[ticket.event_id]) {
+        ticketsByEvent[ticket.event_id] = [];
+      }
+      ticketsByEvent[ticket.event_id].push(ticket);
+    });
+
+    // Attach tickets to events
+    const enrichedEvents = events.map(event => ({
+      ...event,
+      tickets: ticketsByEvent[event.id] || []
+    }));
+
+    res.json(enrichedEvents);
+  } catch (error) {
+    console.error('Failed to list events:', error);
+    res.status(500).json({ error: 'Failed to list events' });
+  }
+};

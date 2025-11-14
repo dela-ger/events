@@ -1,0 +1,10 @@
+CREATE TABLE sales (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  ticket_id INTEGER NOT NULL,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+);

@@ -154,3 +154,29 @@ export const deleteTicket = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete ticket' });
   }
 };
+
+// get a single ticket by ID
+export const getTicket = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const ticketId = parseInt(req.params.id);
+
+    const result = await query(
+      `SELECT t.id, t.name, t.price_cents, t.currency, t.quantity_total, t.quantity_sold, t.per_user_limit,
+              e.id AS event_id, e.title AS event_title, e.start_time AS event_date, e.venue AS event_location
+       FROM tickets t
+       JOIN events e ON t.event_id = e.id
+       WHERE t.id = $1 AND e.company_id = $2`,
+      [ticketId, companyId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Ticket not found or unauthorized' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Failed to fetch ticket:', error);
+    res.status(500).json({ error: 'Failed to fetch ticket' });
+  }
+};

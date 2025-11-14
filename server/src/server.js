@@ -14,13 +14,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
-app.use(router);
+
 app.use('/companies', companyRoutes);
 app.use('/events', eventRoutes);
 app.use('/tickets', ticketRoutes);
-app.use('/sales', salesRoutes);
+app.use('/', salesRoutes);
+app.use(router);
 
-app.get('health', (req, res) => res.json({ ok: true }));
+app.get('/health', (req, res) => res.json({ ok: true }));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`API running on port ${PORT}`)) 
