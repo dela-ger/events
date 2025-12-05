@@ -67,3 +67,32 @@ export const listUsersForCompany = async (req, res) => {
     res.status(500).json({ error: 'Failed to list users' });
   }
 };
+
+// get crm for company
+export const listCRMUsers = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+
+    const result = await query(
+      `SELECT
+         u.id AS user_id,
+         u.name,
+         u.email,
+         COALESCE(SUM(s.quantity), 0) AS tickets_purchased,
+         COALESCE(SUM(s.quantity * t.price_cents), 0) AS revenue_cents
+       FROM users u
+       JOIN sales s ON s.user_id = u.id
+       JOIN tickets t ON s.ticket_id = t.id
+       JOIN events e ON t.event_id = e.id
+       WHERE e.company_id = $1
+       GROUP BY u.id
+       ORDER BY revenue_cents DESC`,
+      [companyId]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Failed to fetch CRM users:', error);
+    res.status(500).json({ error: 'Failed to fetch CRM users' });
+  }
+};
