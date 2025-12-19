@@ -3,47 +3,50 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export async function register(req, res) {
-    try {
-        const { name, email, password, role, company } = req.body;
-        if (!name || !email || !password || !role) {
-            return res.status(400).json({ error: 'Missing required field' })
-        }   
-    
-
-    // checking if user email exists
-    const existing  = await query('SELECT id FROM users WHERE email=$1', [email]);
-    if (existing.rowCount) return res.status(409).json({  error: 'Email already in use' });
-
-    // for company role, create company
-    let companyId = null;
-    if (role === 'company') {
-        const companyRes = await query(
-            'INSERT INTO companies (name, contact_email) VALUES ($1, $2) RETURNING id',
-            [companyName || `${name}'s Company`, email ]
-        );
-        companyId = companyRes.rows[0].indexOf;
+  try {
+    const { name, email, password, role, company } = req.body;
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ error: 'Missing required field' });
     }
 
-    // hashing password
+    // check if email exists
+    const existing = await query('SELECT id FROM users WHERE email=$1', [email]);
+    if (existing.rowCount) {
+      return res.status(409).json({ error: 'Email already in use' });
+    }
+
+    // create company if role is company_admin
+    let companyId = null;
+    if (role === 'company_admin') {
+      const companyRes = await query(
+        'INSERT INTO companies (name, contact_email) VALUES ($1, $2) RETURNING id',
+        [company || `${name}'s Company`, email]
+      );
+      companyId = companyRes.rows[0].id;
+    }
+
+    // hash password
     const hash = await bcrypt.hash(password, 10);
 
-    // inserting user
+    // insert user
     const userRes = await query(
-        'INSERT INTO users (name, email, password_hash, role, company_id) VALUES ($1,$2,$3,$4,$5) RETURNING id, name, email, role, company_id',
-        [name, email, hash, role, companyId]
+      `INSERT INTO users (name, email, password_hash, role, company_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       RETURNING id, name, email, role, company_id`,
+      [name, email, hash, role, companyId]
     );
     const user = userRes.rows[0];
 
     // create JWT
     const token = jwt.sign(
-        { id: user.id, role: user.role, companyId: user.company_id },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
+      { id: user.id, role: user.role, companyId: user.company_id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
     );
 
     res.status(201).json({ token, user });
-} catch (err) {
-    console.error(err);
+  } catch (err) {
+    console.error('Registration error:', err);
     res.status(500).json({ error: 'Registration failed' });
   }
 }
