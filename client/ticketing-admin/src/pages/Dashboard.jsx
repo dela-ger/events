@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useApi } from '../lib/api';
 import styles from './Dashboard.module.css';
+import SignOutButton from '../components/SignOutButton';
 
 const Dashboard = () => {
   const api = useApi();
@@ -15,6 +16,7 @@ const Dashboard = () => {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Dashboard Summary</h1>
+      <SignOutButton />
       <ul>
         {summary.map(event => (
           <li key={event.event_id} className={styles.event}>
