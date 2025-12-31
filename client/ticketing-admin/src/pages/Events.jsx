@@ -30,9 +30,16 @@ const Events = () => {
 
     <Link to={`/events/${event.id}/edit`} >Edit</Link>
     <DeleteEventButton eventId={event.id} />
-  </div>
+
+    <Link to={`/events/${event.id}/tickets/create`} >+ Add Ticket</Link>
+    <br />
+    <Link to={`/events/${event.id}`}>{event.title}</Link>
+
+    </div>
       ))}
       <Link to="/events/create" className={styles.createButton}>Create New Event</Link>
+
+      
     </div>
   );
 };

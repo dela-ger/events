@@ -9,6 +9,9 @@ import CRM from './pages/CRM.jsx'
 import Navbar from './components/Navbar.jsx'
 import CreateEvent from './pages/CreateEvent.jsx'
 import EditEvent from './pages/EditEvent.jsx'
+import CreateTicket from './pages/CreateTicket.jsx'
+import EventDetail from './pages/EventDetail.jsx'
+import EditTicket from './pages/EditTicket.jsx';
 
 
 createRoot(document.getElementById('root')).render(
@@ -21,6 +24,9 @@ createRoot(document.getElementById('root')).render(
         <Route path="/crm" element={<PrivateRoute><CRM /></PrivateRoute>} />
         <Route path='/events/create' element={<CreateEvent />} />
         <Route path='/events/:id/edit' element={<EditEvent />} />
+        <Route path='/events/:id/' element={<EventDetail />} />
+        <Route path='/events/:id/tickets/create' element={<CreateTicket />} />
+        <Route path="/tickets/:id/edit" element={<EditTicket />} />
         <Route path='/login'element={<Login />} />
       </Routes>
     </BrowserRouter>

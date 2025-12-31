@@ -1,22 +1,35 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useApi } from '../lib/api';
-import styles from './CreateTicket.module.css';
+import styles from './EditTicket.module.css';
 import { useNavigate, useParams } from 'react-router-dom';
 
-const CreateTicket = () => {
+const EditTicket = () => {
   const api = useApi();
   const navigate = useNavigate();
-  const { id } = useParams(); // event ID from route
+  const { id } = useParams(); // ticket ID from route
 
   const [formData, setFormData] = useState({
     name: '',
     price_cents: '',
     currency: 'GHS',
-    quantity_total: '',   // <-- corrected field name
+    quantity_total: '',
     per_user_limit: ''
   });
 
   const [error, setError] = useState(null);
+
+  // Fetch existing ticket details
+  useEffect(() => {
+    api.get(`/tickets/${id}`)
+      .then(res => {
+        console.log('Loaded ticket:', res.data);
+        setFormData(res.data);
+      })
+      .catch(err => {
+        console.error('Failed to load ticket:', err);
+        setError('Failed to load ticket details.');
+      });
+  }, [id]);
 
   const handleChange = (e) => {
     setFormData({
@@ -31,26 +44,26 @@ const CreateTicket = () => {
 
     try {
       const payload = {
-        ...formData,
-        event_id: parseInt(id),
+        name: formData.name,
         price_cents: parseInt(formData.price_cents),
-        quantity_total: parseInt(formData.quantity_total), // <-- corrected
+        currency: formData.currency,
+        quantity_total: parseInt(formData.quantity_total),
         per_user_limit: formData.per_user_limit ? parseInt(formData.per_user_limit) : null
       };
 
-      const res = await api.post('/tickets', payload);
-      console.log('Ticket created:', res.data);
+      const res = await api.put(`/tickets/${id}`, payload);
+      console.log('Ticket updated:', res.data);
       // Redirect back to event detail page
-      navigate(`/events/${id}`);
+      navigate(`/events/${res.data.event_id}`);
     } catch (err) {
-      console.error('Failed to create ticket:', err);
-      setError('Failed to create ticket. Please try again.');
+      console.error('Failed to update ticket:', err);
+      setError('Failed to update ticket. Please try again.');
     }
   };
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Create Ticket</h1>
+      <h1 className={styles.title}>Edit Ticket</h1>
       {error && <p className={styles.error}>{error}</p>}
       <form onSubmit={handleSubmit} className={styles.form}>
         <label>
@@ -75,12 +88,12 @@ const CreateTicket = () => {
         </label>
         <label>
           Per User Limit:
-          <input type="number" name="per_user_limit" value={formData.per_user_limit} onChange={handleChange} />
+          <input type="number" name="per_user_limit" value={formData.per_user_limit || ''} onChange={handleChange} />
         </label>
-        <button type="submit" className={styles.button}>Create Ticket</button>
+        <button type="submit" className={styles.button}>Update Ticket</button>
       </form>
     </div>
   );
 };
 
-export default CreateTicket;
+export default EditTicket;
