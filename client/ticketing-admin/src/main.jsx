@@ -12,6 +12,8 @@ import EditEvent from './pages/EditEvent.jsx'
 import CreateTicket from './pages/CreateTicket.jsx'
 import EventDetail from './pages/EventDetail.jsx'
 import EditTicket from './pages/EditTicket.jsx';
+import Sales from './pages/Sales.jsx';
+import SalesSummary from './pages/SalesSummary.jsx';
 
 
 createRoot(document.getElementById('root')).render(
@@ -27,6 +29,9 @@ createRoot(document.getElementById('root')).render(
         <Route path='/events/:id/' element={<EventDetail />} />
         <Route path='/events/:id/tickets/create' element={<CreateTicket />} />
         <Route path="/tickets/:id/edit" element={<EditTicket />} />
+        <Route path="/sales" element={<Sales />} />
+        <Route path="/sales/summary" element={<SalesSummary />} />
+
         <Route path='/login'element={<Login />} />
       </Routes>
     </BrowserRouter>

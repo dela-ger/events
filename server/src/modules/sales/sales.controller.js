@@ -98,7 +98,9 @@ export const listSales = async (req, res) => {
 
     const result = await query(
       `SELECT s.id, s.user_id, s.ticket_id, s.quantity, s.created_at,
-              t.name AS ticket_name, e.title AS event_title
+              t.name AS ticket_name, t.price_cents, t.currency,
+              e.title AS event_title,
+              COALESCE(s.quantity * t.price_cents, 0) AS total_cents
        FROM sales s
        JOIN tickets t ON s.ticket_id = t.id
        JOIN events e ON t.event_id = e.id
@@ -114,6 +116,7 @@ export const listSales = async (req, res) => {
     res.status(500).json({ error: 'Failed to list sales' });
   }
 };
+
 
 // get user sales
 export const getMySales = async (req, res) => {
@@ -170,27 +173,49 @@ export const getSalesByEvent = async (req, res) => {
 export const getDashboardSummary = async (req, res) => {
   try {
     const companyId = req.user.companyId;
+    const { start, end, event_id } = req.query;
+
+    const values = [companyId];
+    let i = 2;
+    const filters = [];
+
+    if (start) {
+      filters.push(`s.created_at >= $${i++}`);
+      values.push(start);
+    }
+    if (end) {
+      filters.push(`s.created_at <= $${i++}`);
+      values.push(end);
+    }
+    if (event_id) {
+      filters.push(`e.id = $${i++}`);
+      values.push(event_id);
+    }
+
+    const whereClause = filters.length > 0 ? `AND ${filters.join(' AND ')}` : '';
 
     const result = await query(
       `SELECT e.id AS event_id, e.title AS event_title,
               COUNT(s.id) AS total_sales,
-              COALESCE(SUM(s.quantity), 0) AS tickets_sold,
-              COALESCE(SUM(s.quantity * t.price_cents), 0) AS revenue_cents
-       FROM events e
-       LEFT JOIN tickets t ON e.id = t.event_id
-       LEFT JOIN sales s ON t.id = s.ticket_id
+              COALESCE(SUM(s.quantity),0) AS tickets_sold,
+              COALESCE(SUM(s.quantity * t.price_cents),0) AS revenue_cents
+       FROM sales s
+       JOIN tickets t ON s.ticket_id = t.id
+       JOIN events e ON t.event_id = e.id
        WHERE e.company_id = $1
+       ${whereClause}
        GROUP BY e.id, e.title
-       ORDER BY e.title ASC`,
-      [companyId]
+       ORDER BY e.title`,
+      values
     );
 
     res.json(result.rows);
   } catch (error) {
-    console.error('Failed to fetch dashboard summary:', error);
-    res.status(500).json({ error: 'Failed to fetch dashboard summary' });
+    console.error('Failed to get dashboard summary:', error);
+    res.status(500).json({ error: 'Failed to get dashboard summary' });
   }
 };
+
 
 // add access control as needed
 export const getSalesByUser = async (req, res) => {

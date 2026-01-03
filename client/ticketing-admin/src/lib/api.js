@@ -11,6 +11,6 @@ export const useApi = () => {
         },
     });
 
-    console.log('using token:', token);
+    // console.log('using token:', token);
     return client;
 }

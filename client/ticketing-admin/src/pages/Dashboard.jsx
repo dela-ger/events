@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useApi } from '../lib/api';
 import styles from './Dashboard.module.css';
 import SignOutButton from '../components/SignOutButton';
+import SalesCharts from '../components/SalesCharts';
 
 const Dashboard = () => {
   const api = useApi();
@@ -51,6 +52,8 @@ const Dashboard = () => {
           <p>GHS {totals.revenue_cents / 100}</p>
         </div>
       </div>
+
+      {/* <SalesCharts /> */}
 
       {/* Per-event breakdown table */}
       <h2 className={styles.subtitle}>Event Breakdown</h2>

@@ -9,6 +9,9 @@ function Navbar() {
       <ul className={styles.navLinks}>
         <li><Link to="/">Dashboard</Link></li>
         <li><Link to="/events">Events</Link></li>
+        <li><Link to="/sales">Sales</Link></li>
+        <li><Link to="/sales/summary">Sales Summary</Link></li>
+
         <li><SignOutButton /></li>
       </ul>
     </nav>
