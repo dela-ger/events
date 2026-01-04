@@ -1,5 +1,6 @@
 import { sendTicketConfirmationEmail, triggerWebhook } from '../../utils/notifications.js';
 import { query } from '../../config/db.js';
+import { Parser } from 'json2csv';
 
 export const purchaseTicket = async (req, res) => {
   try {
@@ -189,7 +190,7 @@ export const getDashboardSummary = async (req, res) => {
     }
     if (event_id) {
       filters.push(`e.id = $${i++}`);
-      values.push(event_id);
+      values.push(parseInt(event_id, 10));
     }
 
     const whereClause = filters.length > 0 ? `AND ${filters.join(' AND ')}` : '';
@@ -215,6 +216,8 @@ export const getDashboardSummary = async (req, res) => {
     res.status(500).json({ error: 'Failed to get dashboard summary' });
   }
 };
+
+
 
 
 // add access control as needed
@@ -265,5 +268,94 @@ export const getUserPurchaseSummary = async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch user purchase summary:', error);
     res.status(500).json({ error: 'Failed to fetch user purchase summary' });
+  }
+};
+
+// get revenue trend
+export const getRevenueTrend = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const { start, end, event_id, interval } = req.query;
+
+    const bucket = interval === 'month' ? 'month' :
+                   interval === 'week' ? 'week' : 'day';
+
+    const result = await query(
+      `SELECT DATE_TRUNC($5, s.created_at) AS period,
+              SUM(s.quantity * t.price_cents) AS revenue_cents
+       FROM sales s
+       JOIN tickets t ON s.ticket_id = t.id
+       JOIN events e ON t.event_id = e.id
+       WHERE e.company_id = $1
+         AND ($2::date IS NULL OR s.created_at >= $2)
+         AND ($3::date IS NULL OR s.created_at <= $3)
+         AND ($4::int IS NULL OR e.id = $4)
+       GROUP BY period
+       HAVING SUM(s.quantity * t.price_cents) > 0
+       ORDER BY period`,
+      [companyId, start || null, end || null, event_id ? parseInt(event_id, 10) : null, bucket]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Failed to get revenue trend:', error);
+    res.status(500).json({ error: 'Failed to get revenue trend' });
+  }
+};
+
+// export summary to csv
+
+
+export const exportSalesSummary = async (req, res) => {
+  try {
+    // Reuse your summary query
+    const companyId = req.user.companyId;
+    const { start, end, event_id } = req.query;
+
+    const values = [companyId];
+    let i = 2;
+    const filters = [];
+
+    if (start) {
+      filters.push(`s.created_at >= $${i++}`);
+      values.push(start);
+    }
+    if (end) {
+      filters.push(`s.created_at <= $${i++}`);
+      values.push(end);
+    }
+    if (event_id) {
+      filters.push(`e.id = $${i++}`);
+      values.push(parseInt(event_id, 10));
+    }
+
+    const whereClause = filters.length > 0 ? `AND ${filters.join(' AND ')}` : '';
+
+    const result = await query(
+      `SELECT e.id AS event_id, e.title AS event_title,
+              COALESCE(SUM(s.quantity),0) AS tickets_sold,
+              COALESCE(SUM(s.quantity * t.price_cents),0) AS revenue_cents
+       FROM sales s
+       JOIN tickets t ON s.ticket_id = t.id
+       JOIN events e ON t.event_id = e.id
+       WHERE e.company_id = $1
+       ${whereClause}
+       GROUP BY e.id, e.title
+       ORDER BY e.title`,
+      values
+    );
+
+    // Convert to CSV
+    const fields = ['event_id', 'event_title', 'tickets_sold', 'revenue_cents'];
+    const parser = new Parser({ fields });
+    const csv = parser.parse(result.rows);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment('sales-summary.csv');
+    res.send(csv);
+  } catch (error) {
+    console.error('Export error details:', error.message, error.stack);
+
+    res.status(500).json({ error: 'Failed to export sales summary' });
   }
 };

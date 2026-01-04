@@ -8,7 +8,7 @@ const Sales = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    api.get('/sales')
+    api.get('/sales/sales')
       .then(res => {
         console.log('Sales data:', res.data);
         setSales(res.data);

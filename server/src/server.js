@@ -19,7 +19,7 @@ app.use(morgan('dev'));
 app.use('/companies', companyRoutes);
 app.use('/events', eventRoutes);
 app.use('/tickets', ticketRoutes);
-app.use('/', salesRoutes);
+app.use('/sales', salesRoutes);
 app.use('/users', userRoutes);
 app.use(router);
 

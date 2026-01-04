@@ -1,7 +1,9 @@
 import express from 'express';
 import  { purchaseTicket, listSales, getMySales, 
     getSalesByEvent, getDashboardSummary, getSalesByUser,
-    getUserPurchaseSummary } from './sales.controller.js';
+    getUserPurchaseSummary, 
+    getRevenueTrend,
+    exportSalesSummary} from './sales.controller.js';
 import { authenticate } from '../auth/auth.middleware.js';
  
 const router = express.Router();
@@ -13,5 +15,7 @@ router.get('/events/:id/sales', authenticate, getSalesByEvent);
 router.get('/dashboard/summary', authenticate, getDashboardSummary);
 router.get('/users/:id/sales', authenticate, getSalesByUser)
 router.get('/users/:id/summary', authenticate, getUserPurchaseSummary);
+router.get('/revenue-trend', authenticate, getRevenueTrend);
+router.get('/dashboard/export',authenticate, exportSalesSummary )
 
 export default router;

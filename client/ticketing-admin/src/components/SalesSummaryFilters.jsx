@@ -1,49 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useApi } from '../lib/api';
 import styles from './SalesSummaryFilters.module.css';
 
-const SalesSummaryFilters = ({ onFilterChange, events }) => {
+const SalesSummaryFilters = ({ onFilterChange }) => {
+  const api = useApi();
   const [filters, setFilters] = useState({
     start: '',
     end: '',
-    eventId: ''
+    eventId: '',
+    interval: 'day'
   });
+  const [events, setEvents] = useState([]);
 
-  const handleChange = (field, value) => {
-    const newFilters = { ...filters, [field]: value };
+  useEffect(() => {
+    api.get('/events')
+      .then(res => setEvents(res.data))
+      .catch(err => console.error('Failed to load events:', err));
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const newFilters = { ...filters, [name]: value };
     setFilters(newFilters);
-    onFilterChange(newFilters); // notify parent
+    onFilterChange(newFilters);
   };
 
   return (
     <div className={styles.filters}>
       <label>
         Start Date:
-        <input
-          type="date"
-          value={filters.start}
-          onChange={e => handleChange('start', e.target.value)}
-        />
+        <input type="date" name="start" value={filters.start} onChange={handleChange} />
       </label>
       <label>
         End Date:
-        <input
-          type="date"
-          value={filters.end}
-          onChange={e => handleChange('end', e.target.value)}
-        />
+        <input type="date" name="end" value={filters.end} onChange={handleChange} />
       </label>
       <label>
         Event:
-        <select
-          value={filters.eventId}
-          onChange={e => handleChange('eventId', e.target.value)}
-        >
+        <select name="eventId" value={filters.eventId} onChange={handleChange}>
           <option value="">All Events</option>
           {events.map(ev => (
-            <option key={ev.id} value={ev.id}>
-              {ev.title}
-            </option>
+            <option key={ev.id} value={ev.id}>{ev.title}</option>
           ))}
+        </select>
+      </label>
+      <label>
+        Interval:
+        <select name="interval" value={filters.interval} onChange={handleChange}>
+          <option value="day">Day</option>
+          <option value="week">Week</option>
+          <option value="month">Month</option>
         </select>
       </label>
     </div>

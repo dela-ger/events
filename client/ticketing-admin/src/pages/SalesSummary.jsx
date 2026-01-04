@@ -3,6 +3,9 @@ import { useApi } from '../lib/api';
 import styles from './SalesSummary.module.css';
 import SalesSummaryFilters from '../components/SalesSummaryFilters.jsx';
 import SalesCharts from '../components/SalesCharts.jsx';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const SalesSummary = () => {
   const api = useApi();
@@ -24,9 +27,11 @@ const SalesSummary = () => {
     if (filters.end) params.append('end', filters.end);
     if (filters.eventId) params.append('event_id', filters.eventId);
 
-    api.get(`/dashboard/summary?${params.toString()}`)
+    api.get(`sales/dashboard/summary?${params.toString()}`)
       .then(res => setSummary(res.data))
       .catch(err => console.error('Failed to load summary:', err));
+
+    console.log('Applied filters:', filters);
   }, [filters]);
 
   // Totals
@@ -39,6 +44,33 @@ const SalesSummary = () => {
     },
     { sales: 0, tickets: 0, revenue: 0 }
   );
+
+  const handleDownloadCSV = async () => {
+  try {
+    const params = new URLSearchParams(filters).toString();
+
+    // Use axios directly to include auth headers
+    const response = await axios.get(`${API_URL}/sales/dashboard/export?${params}`, {
+      responseType: 'blob', // important for file download
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`, // or however you store JWT
+      },
+    });
+
+    // Create a blob URL and trigger download
+    const blob = new Blob([response.data], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'sales_summary.csv');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Failed to download CSV:', err);
+  }
+};
 
   return (
     <div className={styles.container}>
@@ -86,6 +118,14 @@ const SalesSummary = () => {
           ))}
         </tbody>
       </table>
+
+      <button onClick={handleDownloadCSV}>
+  Download CSV
+</button>
+
+
+
+
     </div>
   );
 };
