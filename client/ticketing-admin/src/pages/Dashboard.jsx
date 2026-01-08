@@ -9,7 +9,7 @@ const Dashboard = () => {
   const [summary, setSummary] = useState([]); // array of event summaries
 
   useEffect(() => {
-    api.get('/dashboard/summary')
+    api.get('/sales/dashboard/summary')
       .then(res => {
         console.log('Dashboard summary data:', res.data);
         setSummary(res.data);

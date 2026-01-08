@@ -3,7 +3,6 @@ import { useApi } from '../lib/api';
 import styles from './SalesSummary.module.css';
 import SalesSummaryFilters from '../components/SalesSummaryFilters.jsx';
 import SalesCharts from '../components/SalesCharts.jsx';
-import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -45,19 +44,21 @@ const SalesSummary = () => {
     { sales: 0, tickets: 0, revenue: 0 }
   );
 
+//   Average ticket price
+  const avgTicketPrice = totals.tickets > 0 
+  ? (totals.revenue / totals.tickets) / 100 
+  : 0;
+
+
   const handleDownloadCSV = async () => {
   try {
     const params = new URLSearchParams(filters).toString();
 
-    // Use axios directly to include auth headers
-    const response = await axios.get(`${API_URL}/sales/dashboard/export?${params}`, {
-      responseType: 'blob', // important for file download
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`, // or however you store JWT
-      },
+    // Use your authenticated api client
+    const response = await api.get(`/sales/dashboard/export?${params}`, {
+      responseType: 'blob',
     });
 
-    // Create a blob URL and trigger download
     const blob = new Blob([response.data], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -71,6 +72,9 @@ const SalesSummary = () => {
     console.error('Failed to download CSV:', err);
   }
 };
+
+
+
 
   return (
     <div className={styles.container}>
@@ -88,6 +92,12 @@ const SalesSummary = () => {
             {new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS' })
               .format(totals.revenue / 100)}
           </p>
+        </div>
+        <div className={styles.card}> 
+            <h2>Avg Ticket Price</h2> 
+            <p> {totals.tickets > 0 ? 
+            new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS' }) .format(avgTicketPrice) : 'N/A'} 
+            </p> 
         </div>
       </div>
 

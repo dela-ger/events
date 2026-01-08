@@ -1,4 +1,5 @@
 import { query } from '../../config/db.js';
+import QRCode from 'qrcode';
 
 export const createTicket = async (req, res) => {
   try {
