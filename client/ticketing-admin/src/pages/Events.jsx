@@ -17,6 +17,25 @@ const Events = () => {
       .catch(err => console.error('Failed to load events:', err));
   }, []);
 
+  const handlePublish = async (id) => {
+  try {
+    const res = await api.patch(`/admin/events/${id}/publish`);
+    // Update local state with the updated event
+    setEvents(events.map(e => e.id === id ? res.data.event : e));
+  } catch (err) {
+    console.error('Failed to publish event:', err);
+  }
+};
+
+const handleUnpublish = async (id) => {
+  try {
+    const res = await api.patch(`/admin/events/${id}/unpublish`);
+    setEvents(events.map(e => e.id === id ? res.data.event : e));
+  } catch (err) {
+    console.error('Failed to unpublish event:', err);
+  }
+};
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>All Events</h1>
@@ -35,10 +54,28 @@ const Events = () => {
     <br />
     <Link to={`/events/${event.id}`}>{event.title}</Link>
 
+    <br />
+    <button
+  onClick={() => handlePublish(event.id)}
+  disabled={event.status === 'published'}
+>
+  Publish
+</button>
+
+<button
+  onClick={() => handleUnpublish(event.id)}
+  disabled={event.status === 'draft'}
+>
+  Unpublish
+</button>
+
     </div>
       ))}
       <Link to="/events/create" className={styles.createButton}>Create New Event</Link>
 
+
+
+      
       
     </div>
   );
