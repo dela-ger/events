@@ -10,6 +10,8 @@ import userRoutes from './modules/user/user.routes.js';
 import paymentsRoutes from './modules/payments/payments.route.js';
 import publicRouter from './modules/event/publicEvent.route.js';
 import adminEventRouter from './modules/event/adminEvent.route.js';
+import publicTicketRouter from './modules/ticket/publicTicket.route.js';
+import publicPaymentRouter from './modules/payments/publicPayment.route.js';
 import router from './routes.js';
 
 dotenv.config();
@@ -25,8 +27,10 @@ app.use('/tickets', ticketRoutes);
 app.use('/sales', salesRoutes);
 app.use('/users', userRoutes);
 app.use('/payments', paymentsRoutes);
-app.use('/public', publicRouter)
-app.use('/admin', adminEventRouter)
+app.use('/public', publicRouter);  // Public event routes
+app.use('/admin', adminEventRouter);
+app.use('/public', publicTicketRouter);  // Public ticket routes
+app.use('/public', publicPaymentRouter);  // Public payment routes
 app.use(router);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
