@@ -17,6 +17,8 @@ import SalesSummary from './pages/SalesSummary.jsx';
 import PaymentCallback from './components/payments/PaymentCallback.jsx'
 import TicketsPage from './pages/customer/TicketsPage.jsx'
 import TicketDetailPage from './pages/customer/TicketDetailPage.jsx'
+import Checkout from './pages/customer/Checkout.jsx'
+import Success from './pages/Success.jsx'
 
 
 createRoot(document.getElementById('root')).render(
@@ -37,6 +39,8 @@ createRoot(document.getElementById('root')).render(
         <Route path="/payments/callback" element={<PaymentCallback />} />
         <Route path='/tickets' element={<TicketsPage />} />
         <Route path='/tickets/:id' element={<TicketDetailPage />} />
+        <Route path='/checkout/:eventId/:ticketId' element={<Checkout />} />
+        <Route path='/success' element={<Success />} />
         <Route path='/login'element={<Login />} />
       </Routes>
     </BrowserRouter>
