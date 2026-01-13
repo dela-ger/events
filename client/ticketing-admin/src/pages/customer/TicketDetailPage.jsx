@@ -9,6 +9,7 @@ const TicketDetailPage = () => {
   const [tickets, setTickets] = useState([]);
   const [event, setEvent] = useState(null);
   const [quantities, setQuantities] = useState({});
+  const [emails, setEmails] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,12 +18,10 @@ const TicketDetailPage = () => {
         const { data } = await httpClient.get(`/public/events/${id}/tickets`);
         console.log('Fetched tickets data:', data);
 
-        // If your backend returns { event, tickets }
         if (data.event && data.tickets) {
           setEvent(data.event);
           setTickets(data.tickets);
         } else {
-          // If backend returns just an array of tickets
           setTickets(data);
         }
       } catch (err) {
@@ -38,6 +37,10 @@ const TicketDetailPage = () => {
     setQuantities(prev => ({ ...prev, [ticketId]: value }));
   };
 
+  const handleEmailChange = (ticketId, value) => {
+    setEmails(prev => ({ ...prev, [ticketId]: value }));
+  };
+
   if (loading) return <div>Loading tickets…</div>;
   if (!tickets || tickets.length === 0) return <div>No tickets found for this event</div>;
 
@@ -47,13 +50,14 @@ const TicketDetailPage = () => {
         <div className="event-info">
           <h1>{event.title}</h1>
           <p>{event.description}</p>
-          
-          <p>
-            {dayjs(event.start_time).format('MMM D, YYYY · h:mm A')}
-          </p>
+          <p>{dayjs(event.start_time).format('MMM D, YYYY · h:mm A')}</p>
           <p>{event.venue}</p>
           {event.banner_url && (
-            <img src={event.banner_url} alt={event.title} style={{ maxWidth: '100%', borderRadius: '8px' }} />
+            <img
+              src={event.banner_url}
+              alt={event.title}
+              style={{ maxWidth: '100%', borderRadius: '8px' }}
+            />
           )}
         </div>
       )}
@@ -62,6 +66,7 @@ const TicketDetailPage = () => {
       {tickets.map(ticket => {
         const available = ticket.quantity_total - ticket.quantity_sold;
         const quantity = quantities[ticket.id] || 1;
+        const email = emails[ticket.id] || '';
 
         return (
           <div key={ticket.id} className="ticket-card" style={{ marginBottom: '24px' }}>
@@ -84,11 +89,24 @@ const TicketDetailPage = () => {
               />
             </label>
 
+            <label style={{ display: 'block', marginTop: '8px' }}>
+              Email:
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => handleEmailChange(ticket.id, e.target.value)}
+                style={{ marginLeft: '8px', width: '250px' }}
+                required
+              />
+            </label>
+
             <div style={{ marginTop: '12px' }}>
               <PaystackCheckoutButton
+                eventId={event.id}
                 ticketId={ticket.id}
                 quantity={quantity}
-                email={ticket.user_email || 'customer@example.com'} // replace with logged-in user email
+                email={email}
                 onInitSuccess={(ref) => console.log('Payment reference:', ref)}
               />
             </div>

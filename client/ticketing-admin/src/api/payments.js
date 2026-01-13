@@ -1,7 +1,11 @@
+// api/payments.js
 import httpClient from './httpClient';
 
-export async function initializePurchase(payload) {
-  const { data } = await httpClient.post('/payments/initialize', payload);
+export async function initializePurchase(eventId, ticketId, payload) {
+  const { data } = await httpClient.post(
+    `/public/events/${eventId}/tickets/${ticketId}/purchase`,
+    payload
+  );
   return data;
 }
 

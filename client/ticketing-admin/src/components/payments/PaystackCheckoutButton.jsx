@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { initializePurchase } from '../../api/payments';
 
-const PaystackCheckoutButton = ({ ticketId, quantity, email, onInitSuccess }) => {
+const PaystackCheckoutButton = ({ eventId, ticketId, quantity, email, onInitSuccess }) => {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
     if (loading) return;
     setLoading(true);
     try {
-      const res = await initializePurchase({ ticketId, quantity, email });
+      const res = await initializePurchase(eventId, ticketId, { quantity, email });
       onInitSuccess?.(res.reference);
       window.location.assign(res.authorization_url);
     } catch (err) {
@@ -26,5 +26,6 @@ const PaystackCheckoutButton = ({ ticketId, quantity, email, onInitSuccess }) =>
     </button>
   );
 };
+
 
 export default PaystackCheckoutButton;
