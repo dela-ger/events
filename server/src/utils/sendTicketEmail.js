@@ -1,4 +1,4 @@
-import { transporter } from "../config/email";
+import { transporter } from "../config/email.js";
 import QRCode from "qrcode";
 
 export async function sendTicketEmail(to, event, ticket, quantity, ticketCode) {

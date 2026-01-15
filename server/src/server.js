@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import './config/env.js';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -14,7 +14,26 @@ import publicTicketRouter from './modules/ticket/publicTicket.route.js';
 import publicPaymentRouter from './modules/payments/publicPayment.route.js';
 import router from './routes.js';
 
-dotenv.config();
+// Get the directory name of the current module
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+// Load .env from parent directory (server folder)
+// dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// Parse and check password
+// if (process.env.DATABASE_URL) {
+//   const url = new URL(process.env.DATABASE_URL);
+//   console.log('Username:', url.username);
+//   console.log('Password:', url.password);
+//   console.log('Password type:', typeof url.password);
+//   console.log('Password length:', url.password?.length);
+// }
+
+// Debug: Verify .env loaded
+console.log('DATABASE_URL loaded:', process.env.DATABASE_URL ? '✓ YES' : '✗ NO');
+
+// dotenv.config({ path: path.resolve('../.env') });
 
 const app = express();
 app.use(cors());

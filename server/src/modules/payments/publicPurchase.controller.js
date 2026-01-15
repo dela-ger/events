@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { query } from '../../config/db.js';
 import crypto from 'crypto';
+import { sendTicketEmail } from '../../utils/sendTicketEmail.js';
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
 
@@ -89,6 +90,7 @@ export const verifyPayment = async (req, res) => {
     }
 
     const payload = req.body;
+    // console.log('Webhook payload:', payload);
 
     if (payload.event === 'charge.success') {
       const { eventId, ticketId, quantity } = payload.data.metadata;
@@ -110,6 +112,19 @@ export const verifyPayment = async (req, res) => {
          WHERE payment_reference = $2`,
         ['PAID', reference]
       );
+
+    //   Generate ticket code
+       const ticketCode = `EVT${eventId}-TKT${ticketId}-${Date.now()}`;
+
+       // Fetch event + ticket info 
+       const eventRes = await query(`SELECT * FROM events WHERE id = $1`, [eventId]); 
+       const ticketRes = await query(`SELECT * FROM tickets WHERE id = $1`, [ticketId]);
+
+       const event = eventRes.rows[0];
+       const ticket = ticketRes.rows[0];
+
+    //    send email
+    await sendTicketEmail(buyerEmail, event, ticket, quantity, ticketCode); 
     }
 
     res.sendStatus(200);
