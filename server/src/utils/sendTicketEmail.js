@@ -2,8 +2,8 @@ import { transporter } from "../config/email.js";
 import QRCode from "qrcode";
 
 export async function sendTicketEmail(to, event, ticket, quantity, ticketCode) {
-  // Generate QR code for ticketCode
-  const qrDataUrl = await QRCode.toDataURL(ticketCode);
+  // Generate QR code buffer
+  const qrBuffer = await QRCode.toBuffer(ticketCode);
 
   const mailOptions = {
     from: '"Event Tickets" <no-reply@yourapp.com>',
@@ -18,8 +18,15 @@ export async function sendTicketEmail(to, event, ticket, quantity, ticketCode) {
       <p>Quantity: ${quantity}</p>
       <p><strong>Ticket Code:</strong> ${ticketCode}</p>
       <p>Please present this QR code at the event entrance:</p>
-      <img src="${qrDataUrl}" alt="Ticket QR Code" />
+      <img src="cid:qrcode" alt="Ticket QR Code" />
     `,
+    attachments: [
+      {
+        filename: 'qrcode.png',
+        content: qrBuffer,
+        cid: 'qrcode' // same as in the img src
+      }
+    ]
   };
 
   await transporter.sendMail(mailOptions);
